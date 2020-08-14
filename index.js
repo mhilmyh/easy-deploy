@@ -17,7 +17,7 @@ app.post("/webhook", (req, res) => {
 				res.status(500).json({ error: error.code, stdout, stderr });
 				return;
 			}
-			res.status(200).json({ error, stdout, stderr });
+			res.status(200).json({ error: error.code, stdout, stderr });
 		}
 	);
 });

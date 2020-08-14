@@ -23,10 +23,10 @@ app.post("/webhook", (req, res) => {
 	const cmd = `cd /var/www/psn && git pull -f ${String(escapedOrigin)}`;
 	exec(cmd, (error, stdout, stderr) => {
 		if (error) {
-			res.status(500).json({ error: error.code, stdout, stderr });
+			res.status(500).json({ error: error.code, stdout, stderr, cmd });
 			return;
 		}
-		res.status(200).json({ error: error.code, stdout, stderr });
+		res.status(200).json({ error: error.code, stdout, stderr, cmd });
 	});
 });
 

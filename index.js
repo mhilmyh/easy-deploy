@@ -22,6 +22,8 @@ app.post("/webhook", (req, res) => {
 	deploy.on("close", (code) => {
 		console.log(`child process exited with code ${code}`);
 	});
+
+	res.json({ message: "Deployment running" });
 });
 
 app.listen(port, () => console.log(`Running server in port ${port}`));

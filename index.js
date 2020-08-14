@@ -10,6 +10,7 @@ app.get("/", (req, res) => {
 });
 app.post("/webhook", (req, res) => {
 	const payload = {
+		workdir: req.params.workdir ? req.params.workdir : process.env.WORKDIR,
 		username: req.params.username ? req.params.username : process.env.USERNAME, // better use username from params
 		username: req.params.password ? req.params.password : process.env.PASSWORD, // better use password from params
 		name: req.params.name ? req.params.name : process.env.NAME,
@@ -20,7 +21,11 @@ app.post("/webhook", (req, res) => {
 	};
 	const origin = `https://${payload.username}:${payload.password}@github.com/${payload.name}/${payload.repo}.git ${payload.branch}`;
 	const escapedOrigin = String(origin).replace(/([\"\'\$\`\\])/g, "\\$1");
-	const cmd = `cd /var/www/psn && git pull -f ${String(escapedOrigin)}`;
+	const escapedWorkdir = String(payload.workdir).replace(
+		/([\"\'\$\`\\])/g,
+		"\\$1"
+	);
+	const cmd = `cd ${escapedWorkdir} && git pull -f ${String(escapedOrigin)}`;
 	exec(cmd, (error, stdout, stderr) => {
 		if (error) {
 			res.status(500).json({ error: error.code, stdout, stderr, cmd });

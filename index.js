@@ -2,6 +2,10 @@ const express = require("express");
 const app = express();
 const port = 6789;
 const { spawn } = require("child_process");
+
+app.get("/", (req, res) => {
+	res.json({ message: "I am alive" });
+});
 app.post("/webhook", (req, res) => {
 	const deploy = spawn(
 		"git fetch origin && git reset --hard origin/master && npm install && npm run build",

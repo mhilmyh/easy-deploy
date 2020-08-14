@@ -8,7 +8,7 @@ app.get("/", (req, res) => {
 });
 app.post("/webhook", (req, res) => {
 	exec(
-		"git fetch origin && git reset --hard origin/master && npm install && npm run build",
+		"cd /var/www/psn && git fetch origin && git reset --hard origin/master && npm install && npm run build",
 		(error, stdout, stderr) => {
 			if (error) {
 				res.status(500).json({ error, stdout, stderr });

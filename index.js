@@ -19,13 +19,17 @@ app.post("/webhook", (req, res) => {
 	};
 	const origin = `https://${payload.username}:${payload.password}@github.com/${payload.name}/${payload.repo}.git ${payload.branch}`;
 	const escapedOrigin = String(origin).replace(/([\"\'\$\`\\])/g, "\\$1");
+	const escapedBranch = String(payload.branch).replace(
+		/([\"\'\$\`\\])/g,
+		"\\$1"
+	);
 	const escapedWorkdir = String(payload.workdir).replace(
 		/([\"\'\$\`\\])/g,
 		"\\$1"
 	);
 	const cmd = `cd ${escapedWorkdir} && git fetch ${String(
 		escapedOrigin
-	)} && git reset --hard ${escapedOrigin}/${payload.branch}`;
+	)} && git reset --hard ${escapedOrigin}/${escapedBranch}`;
 	exec(cmd, (error, stdout, stderr) => {
 		if (error) {
 			res.status(500).json({ error: error.code, stdout, stderr, cmd });

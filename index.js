@@ -23,7 +23,9 @@ app.post("/webhook", (req, res) => {
 		/([\"\'\$\`\\])/g,
 		"\\$1"
 	);
-	const cmd = `cd ${escapedWorkdir} && git pull -f ${String(escapedOrigin)}`;
+	const cmd = `cd ${escapedWorkdir} && git fetch ${String(
+		escapedOrigin
+	)} && git reset --hard ${escapedOrigin}/${payload.branch}`;
 	exec(cmd, (error, stdout, stderr) => {
 		if (error) {
 			res.status(500).json({ error: error.code, stdout, stderr, cmd });

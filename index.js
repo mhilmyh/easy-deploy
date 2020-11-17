@@ -9,7 +9,7 @@ const { EventEmitter } = require("events");
 const { spawn } = require("child_process");
 const path = require("path");
 
-const eventName = process.env.eventName || "exec";
+const eventName = process.env.EVENT_NAME || "exec";
 
 const eventHandler = new EventEmitter();
 

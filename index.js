@@ -1,42 +1,53 @@
+process.chdir(__dirname);
 require("dotenv").config();
 
 const express = require("express");
 const app = express();
-const port = 6789;
-const { exec } = require("child_process");
+const port = process.env.EASY_DEPLOY_PORT || 6789;
 
-app.get("/", (req, res) => {
-	res.json({ message: "I am alive" });
+const { EventEmitter } = require("events");
+const { spawn } = require("child_process");
+const path = require("path");
+
+const eventName = process.env.eventName || "exec";
+
+const eventHandler = new EventEmitter();
+
+eventHandler.on(eventName, (cmd) => {
+  console.log(`[${eventName}]: ${cmd}`);
+  const bash = spawn("bash");
+
+  bash.stdin.end(cmd);
+  bash.stdout.on("data", (data) => {
+    console.log(data.toString());
+  });
+  bash.stderr.on("data", (data) => {
+    console.error(data.toString());
+  });
+  bash.on("exit", (code) => {
+    console.log(`Exit with code ${code} for '${cmd}'`);
+  });
 });
-app.post("/webhook", (req, res) => {
-	const payload = {
-		workdir: req.query.workdir ? req.query.workdir : process.env.WORKDIR,
-		// username: req.query.username ? req.query.username : process.env.USERNAME, // better use username from query
-		// password: req.query.password ? req.query.password : process.env.PASSWORD, // better use password from query
-		// name: req.query.name ? req.query.name : process.env.NAME,
-		// repo: req.query.repository ? req.query.repository : process.env.REPOSITORY,
-		// branch: req.query.branch ? req.query.branch : process.env.BRANCH,
-	};
-	// const origin = `https://${payload.username}:${payload.password}@github.com/${payload.name}/${payload.repo}.git ${payload.branch}`;
-	// const escapedOrigin = String(origin).replace(/([\"\'\$\`\\])/g, "\\$1");
-	// const escapedBranch = String(payload.branch).replace(
-	// 	/([\"\'\$\`\\])/g,
-	// 	"\\$1"
-	// );
-	const escapedWorkdir = String(payload.workdir).replace(
-		/([\"\'\$\`\\])/g,
-		"\\$1"
-	);
-	const cmd = `cd ${escapedWorkdir} && git fetch origin && git reset --hard origin/master`;
-	exec(cmd, (error, stdout, stderr) => {
-		if (error) {
-			res.status(500).json({ error: error.code, stdout, stderr, cmd });
-			return;
-		} else {
-			res.status(200).json({ message: "Deploy" });
-			return;
-		}
-	});
+
+app.get("/ping", (_, res) => {
+  res.send("PONG");
+});
+
+app.post("/pull", (req, res) => {
+  // branch and remote url
+  const { branch, remote } = req.body;
+  const cmd = `git fetch ${remote} && git reset --hard ${remote}/${branch}`;
+  eventHandler.emit(eventName, cmd);
+  res.status(200).send(`Running ${cmd}`);
+});
+
+app.post("/build", (req, res) => {
+  // package manager and directory
+  const { pm, dir } = req.body;
+  const root = path.join(__dirname, dir);
+  const cmd = `cd ${root} && ${pm} run build`;
+  eventHandler.emit(eventName, cmd);
+  res.status(200).send(`Running ${cmd}`);
 });
 
 app.listen(port, () => console.log(`Running server in port ${port}`));
